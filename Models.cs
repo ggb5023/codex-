@@ -57,6 +57,8 @@ internal sealed class RuntimeInspection
 internal sealed class WindowInfo
 {
     public int ProcessId { get; set; }
+
+    [JsonIgnore]
     public nint Handle { get; set; }
     public string Title { get; set; } = "";
     public int Left { get; set; }

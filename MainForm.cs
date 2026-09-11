@@ -203,9 +203,18 @@ internal sealed class MainForm : Form
             FileName = $"Codex自检报告-{DateTime.Now:yyyyMMdd-HHmmss}.txt"
         };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        var paths = _reports.Export(_report, dialog.FileName);
-        MessageBox.Show($"已生成：\n{paths.TextPath}\n{paths.JsonPath}", "导出完成",
-            MessageBoxButtons.OK, MessageBoxIcon.Information);
+        try
+        {
+            var paths = _reports.Export(_report, dialog.FileName);
+            MessageBox.Show($"已生成：\n{paths.TextPath}\n{paths.JsonPath}", "导出完成",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception exception)
+        {
+            _reports.Log($"导出报告失败：{exception}");
+            MessageBox.Show($"报告导出失败：\n{exception.Message}", "导出失败",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private Progress<OperationProgress> CreateProgress() => new(update =>

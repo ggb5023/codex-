@@ -178,7 +178,14 @@ internal sealed class SelfCheckService
         }
         finally
         {
-            try { _reports.SaveLatest(report); } catch { }
+            try
+            {
+                _reports.SaveLatest(report);
+            }
+            catch (Exception exception)
+            {
+                _reports.Log($"保存最新报告失败：{exception}");
+            }
         }
     }
 

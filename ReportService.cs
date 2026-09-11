@@ -44,8 +44,9 @@ internal sealed class ReportService
 
         var textPath = basePath + ".txt";
         var jsonPath = basePath + ".json";
-        File.WriteAllText(textPath, Redact(BuildText(report)), Encoding.UTF8);
+        var text = Redact(BuildText(report));
         var json = JsonSerializer.Serialize(report, JsonOptions);
+        File.WriteAllText(textPath, text, Encoding.UTF8);
         File.WriteAllText(jsonPath, RedactJson(json), Encoding.UTF8);
         return (textPath, jsonPath);
     }
