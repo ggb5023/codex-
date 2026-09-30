@@ -43,19 +43,21 @@ internal static class Program
     {
         var reports = new ReportService();
         var service = new SelfCheckService(reports);
+        var json = args.Any(argument => argument.Equals("--json", StringComparison.OrdinalIgnoreCase));
         var progress = new Progress<OperationProgress>(item =>
         {
-            Console.WriteLine($"[{item.Stage}] {item.Message}");
+            if (!json) Console.WriteLine($"[{item.Stage}] {item.Message}");
         });
 
         try
         {
-            switch (args[0].ToLowerInvariant())
+            var command = args[0].ToLowerInvariant();
+            switch (command)
             {
                 case "--scan":
                 {
                     var report = await service.ScanAsync(true, progress, CancellationToken.None);
-                    Console.WriteLine(ReportService.BuildText(report));
+                    Console.WriteLine(json ? ReportService.BuildJson(report) : ReportService.BuildText(report));
                     return ExitCode(report.Status);
                 }
                 case "--repair":
@@ -88,7 +90,7 @@ internal static class Program
                     return ExitCode(report.Status);
                 }
                 default:
-                    Console.WriteLine("用法：CodexSelfCheck.exe --scan | --repair | --launch | --report <path>");
+                    Console.WriteLine("用法：CodexSelfCheck.exe --scan [--json] | --repair | --launch | --report <path> [--json]");
                     return 1;
             }
         }

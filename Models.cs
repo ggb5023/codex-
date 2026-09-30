@@ -12,6 +12,36 @@ internal enum HealthStatus
     VerificationFailed
 }
 
+internal enum CheckStatus
+{
+    Healthy,
+    Warning,
+    Repairable,
+    ManualAction,
+    Failed,
+    Skipped
+}
+
+internal enum CheckSeverity
+{
+    Info,
+    Warning,
+    Error,
+    Critical
+}
+
+internal sealed class CheckResult
+{
+    public string Id { get; set; } = "";
+    public string Category { get; set; } = "";
+    public CheckStatus Status { get; set; }
+    public CheckSeverity Severity { get; set; }
+    public string Summary { get; set; } = "";
+    public List<string> Evidence { get; set; } = [];
+    public string Recommendation { get; set; } = "";
+    public bool AutoFixable { get; set; }
+}
+
 internal sealed class PackageInfo
 {
     public string Name { get; set; } = "";
@@ -52,6 +82,9 @@ internal sealed class RuntimeInspection
     public List<string> StagingDirectories { get; set; } = [];
     public string? StagingRuntimeId { get; set; }
     public long AvailableBytes { get; set; }
+    public bool SourceReadable { get; set; }
+    public bool RuntimeRootWritable { get; set; }
+    public string? AccessError { get; set; }
 }
 
 internal sealed class WindowInfo
@@ -91,6 +124,7 @@ internal sealed class LaunchVerification
 
 internal sealed class DiagnosticReport
 {
+    public int SchemaVersion { get; set; } = 1;
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.Now;
     public HealthStatus Status { get; set; }
     public string Summary { get; set; } = "";
@@ -107,6 +141,8 @@ internal sealed class DiagnosticReport
     public ProbeResult? Probe { get; set; }
     public List<string> Findings { get; set; } = [];
     public List<string> Errors { get; set; } = [];
+    public List<CheckResult> Checks { get; set; } = [];
+    public List<string> RepairPlan { get; set; } = [];
 }
 
 internal sealed class RepairResult
@@ -116,6 +152,8 @@ internal sealed class RepairResult
     public string Message { get; set; } = "";
     public string? RuntimeId { get; set; }
     public List<string> BackupPaths { get; set; } = [];
+    public List<string> Steps { get; set; } = [];
+    public List<string> Errors { get; set; } = [];
     public LaunchVerification? FirstLaunch { get; set; }
     public LaunchVerification? SecondLaunch { get; set; }
 }

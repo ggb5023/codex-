@@ -36,6 +36,15 @@ internal sealed class PackageDiscovery
         var escaped = path.Replace("'", "''");
         var script = $$"""
             $ErrorActionPreference = 'Stop'
+            if ($null -eq (Get-Command Get-AuthenticodeSignature -ErrorAction SilentlyContinue)) {
+                [pscustomobject]@{
+                    Status = 'Unavailable'
+                    StatusMessage = '当前 Windows PowerShell 无法加载 Microsoft.PowerShell.Security，无法验证数字签名。'
+                    Subject = ''
+                    Thumbprint = ''
+                } | ConvertTo-Json -Compress
+                return
+            }
             $s = Get-AuthenticodeSignature -LiteralPath '{{escaped}}'
             [pscustomobject]@{
                 Status = $s.Status.ToString()

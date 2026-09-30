@@ -51,6 +51,11 @@ internal sealed class ReportService
         return (textPath, jsonPath);
     }
 
+    internal static string BuildJson(DiagnosticReport report)
+    {
+        return RedactJson(JsonSerializer.Serialize(report, JsonOptions));
+    }
+
     internal static string BuildText(DiagnosticReport report)
     {
         var builder = new StringBuilder();
@@ -78,12 +83,33 @@ internal sealed class ReportService
             builder.AppendLine($"预期运行时：{report.ExpectedRuntimeId ?? "未知"}");
             builder.AppendLine($"未完成 staging：{report.Runtime.StagingDirectories.Count} 个");
             builder.AppendLine($"磁盘可用：{RuntimeManager.FormatBytes(report.Runtime.AvailableBytes)}");
+            builder.AppendLine($"源运行时可读：{report.Runtime.SourceReadable}");
+            builder.AppendLine($"本地运行时目录可写：{report.Runtime.RuntimeRootWritable}");
+            if (!string.IsNullOrWhiteSpace(report.Runtime.AccessError))
+                builder.AppendLine($"权限错误：{report.Runtime.AccessError}");
         }
 
         builder.AppendLine($"CODEX_CLI_PATH：{report.CodexCliPath ?? "未设置"}（{report.CodexCliPathScope}）");
         builder.AppendLine();
         builder.AppendLine("发现：");
         foreach (var finding in report.Findings) builder.AppendLine($"- {finding}");
+        if (report.Checks.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("检测项：");
+            foreach (var check in report.Checks)
+            {
+                builder.AppendLine($"- [{check.Id}] {check.Status} / {check.Severity}：{check.Summary}");
+                if (!string.IsNullOrWhiteSpace(check.Recommendation))
+                    builder.AppendLine($"  建议：{check.Recommendation}");
+            }
+        }
+        if (report.RepairPlan.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("修复计划：");
+            foreach (var action in report.RepairPlan) builder.AppendLine($"- {action}");
+        }
         if (report.Errors.Count > 0)
         {
             builder.AppendLine();

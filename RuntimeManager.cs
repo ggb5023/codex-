@@ -29,11 +29,15 @@ internal sealed partial class RuntimeManager
         {
             progress?.Report(new("检测", "正在统计商店包运行时文件……"));
             var source = GetManifest(sourcePath, cancellationToken);
+            var runtimeRootWritable = CanWriteRuntimeRoot(out var accessError);
             var inspection = new RuntimeInspection
             {
                 SourceFileCount = source.Count,
                 SourceBytes = source.Sum(file => file.Length),
-                AvailableBytes = GetAvailableBytes(RuntimeRoot)
+                AvailableBytes = GetAvailableBytes(RuntimeRoot),
+                SourceReadable = source.Count > 0,
+                RuntimeRootWritable = runtimeRootWritable,
+                AccessError = accessError
             };
 
             var directories = Directory.Exists(RuntimeRoot)
@@ -300,6 +304,24 @@ internal sealed partial class RuntimeManager
     {
         var root = Path.GetPathRoot(Path.GetFullPath(path)) ?? throw new IOException("无法确定运行时磁盘。 ");
         return new DriveInfo(root).AvailableFreeSpace;
+    }
+
+    private static bool CanWriteRuntimeRoot(out string? error)
+    {
+        error = null;
+        try
+        {
+            Directory.CreateDirectory(RuntimeRoot);
+            var probe = Path.Combine(RuntimeRoot, $".selfcheck-write-test-{Guid.NewGuid():N}");
+            using (File.Create(probe)) { }
+            File.Delete(probe);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+            return false;
+        }
     }
 
     private static void TryDeleteDirectory(string path)
